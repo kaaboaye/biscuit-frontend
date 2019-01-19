@@ -12,7 +12,6 @@ export default new Vuex.Store({
   state: {
     teas: [],
     _teasId: {},
-    tea: {},
     teaId: 0
   },
 
@@ -33,7 +32,7 @@ export default new Vuex.Store({
 
   mutations: {
     setTeas(state, teas) {
-      state.teas = teas;
+      state.teas = teas.sort((a, b) => a.name.localeCompare(b.name));
     },
 
     setTea(state, tea) {
@@ -47,34 +46,57 @@ export default new Vuex.Store({
       } else {
         state.teaId = 0;
       }
-
-      state.tea = tea;
     },
 
     setTeaId(state, teaId) {
       state.teaId = teaId;
-    },
-
-    selectTea(state, teaId) {
-      state.tea = state._teasId[teaId] || {};
     }
   },
 
   actions: {
-    getTeas({ commit }) {
-      axios.get(url("/teas")).then(res => {
-        const teas = res.data.data;
-        if (teas) {
-          commit("setTeas", teas);
-        }
-      });
+    async getTeas({ commit }) {
+      const res = await axios.get(url("/teas"));
+      const teas = res.data.data;
+      if (teas) {
+        commit("setTeas", teas);
+      }
     },
 
-    getTea({ commit }, teaId) {
+    async getTea({ commit }, teaId) {
       commit("setTeaId", teaId);
-      axios.get(url(`/teas/${teaId}`)).then(res => {
-        commit("setTea", res.data.data);
-      });
+      const res = await axios.get(url(`/teas/${teaId}`));
+      commit("setTea", res.data.data);
+    },
+
+    async addTea({ commit, dispatch, state }, { tea: attrs, callback }) {
+      const res = await axios.post(url("/teas"), { tea: attrs });
+      const tea = res.data.data;
+      if (!tea || !tea.id) {
+        return;
+      }
+
+      const teas = state.teas.filter(t => String(t.id) !== String(tea.id));
+      teas.push(tea);
+      commit("setTeas", teas);
+      commit("setTea", tea);
+      dispatch("getTea", tea.id);
+      callback(tea);
+    },
+
+    async addBrewing({ commit, dispatch, getters }, { brewing: attrs }) {
+      const tea = getters.tea;
+      attrs.teaId = tea.id;
+
+      const res = await axios.post(url("/brewings"), { brewing: attrs });
+      const brewing = res.data.data;
+
+      if (!brewing || !brewing.id) {
+        return;
+      }
+
+      tea.brewings.push(brewing);
+      commit("setTea", tea);
+      dispatch("getTea", tea.id);
     }
   }
 });
