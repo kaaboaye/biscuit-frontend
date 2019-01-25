@@ -8,7 +8,13 @@
       </v-card-title>
 
       <v-card-text>
-        <v-form ref="form" v-model="valid" lazy-validation style="width: 100%">
+        <v-form
+          ref="form"
+          v-model="valid"
+          lazy-validation
+          @keyup.native.enter="save"
+          style="width: 100%"
+        >
           <v-layout row wrap class="x-grid-lg">
             <v-flex>
               <v-text-field

@@ -4,7 +4,13 @@
 
     <v-card>
       <v-card-title>
-        <v-form ref="form" v-model="valid" lazy-validation style="width: 100%">
+        <v-form
+          ref="form"
+          v-model="valid"
+          @submit.prevent="save"
+          lazy-validation
+          style="width: 100%"
+        >
           <v-text-field
             v-model="name"
             :rules="[v => !!v || 'Nazwa jest wymagana']"
